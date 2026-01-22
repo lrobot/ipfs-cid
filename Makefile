@@ -29,7 +29,9 @@ clean:
 # git tag v0.x.0
 # make publish
 publish:
+	git push --tags
 	GOPROXY=proxy.golang.org go list -m "github.com/lrobot/ipfs-cid@$$(git describe --tags --match="v[0-9]*" --abbrev=0 HEAD)"
 publish_by_curl:
+	git push --tags
 	curl -v "https://pkg.go.dev/github.com/lrobot/ipfs-cid@$$(git describe --tags --match="v[0-9]*" --abbrev=0 HEAD)"
 

@@ -44,16 +44,27 @@ func SumStream(p cid.Prefix, r io.Reader) (cid.Cid, error) {
 
 func main() {
 
-	// get arg 1 as file name. and read file content for do pref.Sum(fileContent)
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <filename>")
-		fmt.Println("Example: go run main.go test.txt")
-		os.Exit(1) // Exit with non-zero code to indicate error
+		fmt.Println("Usage by give filename: ipfs-cid <filename>")
+		fmt.Println("Usage by give stdin pipe: cat file.bin | ipfs-cid -stdin")
+		os.Exit(0) // Exit with non-zero code to indicate error
 	}
 
 	// Step 2: Get the filename from the first command-line argument (os.Args[1])
-	filename := os.Args[1]
-
+	var reader io.Reader = nil
+	var file *os.File = nil
+	var err error = nil
+	arg1 := os.Args[1]
+	if arg1 == "-stdin" {
+		reader = os.Stdin
+	} else {
+		file, err = os.Open(arg1)
+		reader = file
+		if err != nil {
+			fmt.Printf("Failed to open file: %v\n", err)
+			os.Exit(1)
+		}
+	}
 	// Step 3: Read file content into []byte
 	// fileContent, err := os.ReadFile(filename)
 	// if err != nil {
@@ -61,14 +72,10 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
-	// Step 2: 打开文件（流式处理，不立即读取内容）
-	file, err := os.Open(filename)
-	if err != nil {
-		fmt.Printf("Failed to open file: %v\n", err)
-		os.Exit(1)
-	}
-	// 确保文件最终关闭（即使发生错误）
 	defer func() {
+		if file == nil {
+			return
+		}
 		if err := file.Close(); err != nil {
 			fmt.Printf("Warning: failed to close file: %v\n", err)
 		}
@@ -84,7 +91,7 @@ func main() {
 
 	// And then feed it some data
 	// c, err := pref.Sum(file)
-	c, err := SumStream(pref, file)
+	c, err := SumStream(pref, reader)
 	if err != nil {
 		panic(err)
 	}
